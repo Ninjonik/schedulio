@@ -1,0 +1,117 @@
+{
+  "database": {
+    "id": "schedulio_db",
+    "name": "Schedulio"
+  },
+  "tables": [
+    {
+      "id": "classes",
+      "name": "Classes",
+      "rowSecurity": true,
+      "columns": [
+        { "type": "varchar", "key": "ownerId", "size": 64, "required": true },
+        { "type": "varchar", "key": "title", "size": 255, "required": true },
+        {
+          "type": "enum",
+          "key": "classKind",
+          "elements": ["lecture", "lab", "other"],
+          "required": false
+        },
+        { "type": "varchar", "key": "code", "size": 50, "required": false },
+        { "type": "integer", "key": "weekday", "required": true, "min": 1, "max": 7 },
+        { "type": "varchar", "key": "startTime", "size": 5, "required": true },
+        { "type": "varchar", "key": "endTime", "size": 5, "required": true },
+        {
+          "type": "enum",
+          "key": "weekPattern",
+          "elements": ["all", "odd", "even"],
+          "required": true
+        },
+        { "type": "varchar", "key": "location", "size": 255, "required": false },
+        { "type": "longtext", "key": "descriptionMd", "required": false },
+        { "type": "url", "key": "imageUrl", "required": false },
+        { "type": "varchar", "key": "color", "size": 20, "required": false }
+      ],
+      "indexes": [
+        {
+          "key": "idx_classes_owner_weekday_time",
+          "type": "key",
+          "columns": ["ownerId", "weekday", "startTime"],
+          "orders": ["ASC", "ASC", "ASC"]
+        }
+      ]
+    },
+    {
+      "id": "class_skips",
+      "name": "Class Skips",
+      "rowSecurity": true,
+      "columns": [
+        { "type": "varchar", "key": "ownerId", "size": 64, "required": true },
+        { "type": "varchar", "key": "classId", "size": 64, "required": true },
+        { "type": "varchar", "key": "date", "size": 10, "required": true },
+        { "type": "varchar", "key": "reason", "size": 255, "required": false }
+      ],
+      "indexes": [
+        {
+          "key": "idx_skips_owner_date",
+          "type": "key",
+          "columns": ["ownerId", "date"],
+          "orders": ["ASC", "ASC"]
+        },
+        {
+          "key": "idx_skips_class_date",
+          "type": "key",
+          "columns": ["classId", "date"],
+          "orders": ["ASC", "ASC"]
+        }
+      ]
+    },
+    {
+      "id": "tasks",
+      "name": "Tasks",
+      "rowSecurity": true,
+      "columns": [
+        { "type": "varchar", "key": "ownerId", "size": 64, "required": true },
+        { "type": "varchar", "key": "classId", "size": 64, "required": true },
+        { "type": "varchar", "key": "occurrenceDate", "size": 10, "required": true },
+        { "type": "varchar", "key": "title", "size": 255, "required": true },
+        { "type": "longtext", "key": "notesMd", "required": false },
+        { "type": "boolean", "key": "done", "required": false, "default": false }
+      ],
+      "indexes": [
+        {
+          "key": "idx_tasks_owner_date",
+          "type": "key",
+          "columns": ["ownerId", "occurrenceDate"],
+          "orders": ["ASC", "ASC"]
+        },
+        {
+          "key": "idx_tasks_class_date",
+          "type": "key",
+          "columns": ["classId", "occurrenceDate"],
+          "orders": ["ASC", "ASC"]
+        }
+      ]
+    },
+    {
+      "id": "subtasks",
+      "name": "Subtasks",
+      "rowSecurity": true,
+      "columns": [
+        { "type": "varchar", "key": "ownerId", "size": 64, "required": true },
+        { "type": "varchar", "key": "taskId", "size": 64, "required": true },
+        { "type": "varchar", "key": "title", "size": 255, "required": true },
+        { "type": "boolean", "key": "done", "required": false, "default": false }
+      ],
+      "indexes": [
+        {
+          "key": "idx_subtasks_owner_task",
+          "type": "key",
+          "columns": ["ownerId", "taskId"],
+          "orders": ["ASC", "ASC"]
+        }
+      ]
+    }
+  ]
+}
+

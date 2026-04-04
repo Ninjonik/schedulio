@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Schedulio
 
-## Getting Started
+Schedulio is a Next.js 16 + React 19 college planner with Appwrite (1.9 TablesDB):
 
-First, run the development server:
+- Email/password registration and login
+- Weekly class schedule with `all`, `odd`, and `even` week patterns
+- Skip dates for holidays/cancellations
+- Week-by-week calendar navigation
+- Per-class task state (done checkbox), markdown notes, and subtasks
+- Modern UI built with Tailwind, shadcn/ui, and Aceternity UI effects
+
+## Tech stack
+
+- Next.js 16 (App Router)
+- React 19
+- Bun
+- Appwrite (Auth + TablesDB)
+- Tailwind CSS v4
+- shadcn/ui + Aceternity registry components
+
+## 1) Install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 2) Configure env
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` to `.env.local` and fill values.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env.local
+```
 
-## Learn More
+Windows PowerShell:
 
-To learn more about Next.js, take a look at the following resources:
+```powershell
+Copy-Item .env.example .env.local
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 3) Appwrite backend setup (CLI)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Schema files:
 
-## Deploy on Vercel
+- `scripts/appwrite-schema.json`
+- `scripts/setup-appwrite.ps1`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Run a dry run first:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```powershell
+bun run appwrite:setup:dry
+```
+
+Apply schema to your Appwrite **scheduler** project:
+
+```powershell
+bun run appwrite:setup
+```
+
+This creates/ensures:
+
+- Database: `schedulio_db`
+- Tables: `classes`, `class_skips`, `tasks`, `subtasks`
+- Required columns and indexes for schedule recurrence, skips, tasks, and subtasks
+
+Optional verification:
+
+```powershell
+bunx --bun appwrite-cli@latest tables-db list-tables --database-id schedulio_db
+bunx --bun appwrite-cli@latest tables-db list-columns --database-id schedulio_db --table-id classes
+bunx --bun appwrite-cli@latest tables-db list-indexes --database-id schedulio_db --table-id classes
+```
+
+## 4) Run
+
+```bash
+bun run dev
+```
+
+Open `http://localhost:3000`.
+
+## Security notes
+
+- Appwrite API key is used only on the server.
+- Session secret is stored in an HTTP-only cookie (`schedulio_session`).
+- Protected routes are guarded by middleware and server-side auth checks.
+
+## Useful scripts
+
+```bash
+bun run dev
+bun run build
+bun run start
+bun run lint
+bun run typecheck
+```
