@@ -91,13 +91,21 @@ Try-Run -Description "Create database $($schema.database.id)" -Action {
 
 foreach ($table in $schema.tables) {
   Try-Run -Description "Create table $($table.id)" -Action {
-    Invoke-Appwrite -CliArgs @(
+    $tableArgs = @(
       "tables-db", "create-table",
       "--database-id", $schema.database.id,
       "--table-id", $table.id,
       "--name", $table.name,
       "--row-security", ([string]$table.rowSecurity).ToLower()
     )
+
+    if ($null -ne $table.permissions) {
+      foreach ($permission in $table.permissions) {
+        $tableArgs += @("--permissions", $permission)
+      }
+    }
+
+    Invoke-Appwrite -CliArgs $tableArgs
   }
 
   foreach ($column in $table.columns) {

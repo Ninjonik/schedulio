@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient, ID, Query } from "@/lib/appwrite";
+import { createAdminClient, ID, Permission, Query, Role } from "@/lib/appwrite";
 import type { ClassKind } from "@/lib/class-kind";
 import { env } from "@/lib/env";
 import type { ClassRow, SkipRow, SubtaskRow, TaskRow, WeekPattern } from "@/lib/types";
@@ -29,6 +29,55 @@ const tableIds = {
 };
 
 const dbId = env.APPWRITE_DATABASE_ID;
+type TablesDBClient = ReturnType<typeof createAdminClient>["tablesDB"];
+
+const ownerPermissions = (ownerId: string) => [
+  Permission.read(Role.user(ownerId)),
+  Permission.update(Role.user(ownerId)),
+  Permission.delete(Role.user(ownerId)),
+];
+
+const assertOwnedClass = async (tablesDB: TablesDBClient, ownerId: string, classId: string) => {
+  const classRow = await tablesDB.getRow<ClassRow>({
+    databaseId: dbId,
+    tableId: tableIds.classes,
+    rowId: classId,
+  });
+
+  if (classRow.ownerId !== ownerId) {
+    throw new Error("Class not found.");
+  }
+
+  return classRow;
+};
+
+const assertOwnedTask = async (tablesDB: TablesDBClient, ownerId: string, taskId: string) => {
+  const task = await tablesDB.getRow<TaskRow>({
+    databaseId: dbId,
+    tableId: tableIds.tasks,
+    rowId: taskId,
+  });
+
+  if (task.ownerId !== ownerId) {
+    throw new Error("Task not found.");
+  }
+
+  return task;
+};
+
+const assertOwnedSubtask = async (tablesDB: TablesDBClient, ownerId: string, subtaskId: string) => {
+  const subtask = await tablesDB.getRow<SubtaskRow>({
+    databaseId: dbId,
+    tableId: tableIds.subtasks,
+    rowId: subtaskId,
+  });
+
+  if (subtask.ownerId !== ownerId) {
+    throw new Error("Subtask not found.");
+  }
+
+  return subtask;
+};
 
 export const listClasses = async (ownerId: string) => {
   const { tablesDB } = createAdminClient();
@@ -55,14 +104,17 @@ export const createClass = async (
       ownerId,
       ...payload,
     },
+    permissions: ownerPermissions(ownerId),
   });
 };
 
 export const updateClass = async (
+  ownerId: string,
   classId: string,
   payload: ClassUpdateInput,
 ) => {
   const { tablesDB } = createAdminClient();
+  await assertOwnedClass(tablesDB, ownerId, classId);
   return tablesDB.updateRow<ClassRow>({
     databaseId: dbId,
     tableId: tableIds.classes,
@@ -98,6 +150,7 @@ export const createSkip = async (
   reason?: string,
 ) => {
   const { tablesDB } = createAdminClient();
+  await assertOwnedClass(tablesDB, ownerId, classId);
 
   return tablesDB.createRow<SkipRow>({
     databaseId: dbId,
@@ -109,6 +162,7 @@ export const createSkip = async (
       date,
       reason,
     },
+    permissions: ownerPermissions(ownerId),
   });
 };
 
@@ -179,6 +233,8 @@ export const upsertTask = async (
     });
   }
 
+  await assertOwnedClass(tablesDB, ownerId, classId);
+
   return tablesDB.createRow<TaskRow>({
     databaseId: dbId,
     tableId: tableIds.tasks,
@@ -191,6 +247,7 @@ export const upsertTask = async (
       title: updates.title ?? "Class log",
       notesMd: updates.notesMd ?? "",
     },
+    permissions: ownerPermissions(ownerId),
   });
 };
 
@@ -219,6 +276,7 @@ export const createSubtask = async (
   title: string,
 ) => {
   const { tablesDB } = createAdminClient();
+  await assertOwnedTask(tablesDB, ownerId, taskId);
 
   return tablesDB.createRow<SubtaskRow>({
     databaseId: dbId,
@@ -230,6 +288,7 @@ export const createSubtask = async (
       title,
       done: false,
     },
+    permissions: ownerPermissions(ownerId),
   });
 };
 
@@ -239,12 +298,12 @@ export const toggleSubtask = async (
   done: boolean,
 ) => {
   const { tablesDB } = createAdminClient();
+  await assertOwnedSubtask(tablesDB, ownerId, subtaskId);
   return tablesDB.updateRow<SubtaskRow>({
     databaseId: dbId,
     tableId: tableIds.subtasks,
     rowId: subtaskId,
     data: {
-      ownerId,
       done,
     },
   });

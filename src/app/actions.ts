@@ -134,12 +134,7 @@ export const updateClassKindAction = async (formData: FormData) => {
   const classId = z.string().min(1).parse(formData.get("classId"));
   const classKind = z.enum(["lecture", "lab", "other"]).parse(formData.get("classKind"));
 
-  const ownedClasses = await listClasses(user.$id);
-  if (!ownedClasses.some((classRow) => classRow.$id === classId)) {
-    throw new Error("Class not found.");
-  }
-
-  await updateClass(classId, { classKind });
+  await updateClass(user.$id, classId, { classKind });
 
   revalidatePath("/classes");
   revalidatePath("/calendar");
@@ -259,7 +254,7 @@ export const importCuniScheduleAction = async (formData: FormData) => {
           (existing.location ?? "") !== (item.location ?? "") ||
           (existing.descriptionMd ?? "") !== (item.descriptionMd ?? ""))
       ) {
-        await updateClass(classId, {
+        await updateClass(user.$id, classId, {
           classKind: item.classKind,
           weekPattern: item.weekPattern,
           location: item.location,

@@ -1,15 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
 import { BackgroundBeams } from "@/components/ui/background-beams";
-import { getCurrentUser } from "@/lib/appwrite";
 
 export default async function RegisterPage() {
-  const user = await getCurrentUser();
-
-  if (user) {
-    redirect("/calendar");
-  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-4">

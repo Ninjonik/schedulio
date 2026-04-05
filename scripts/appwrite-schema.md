@@ -3,6 +3,7 @@
 Database ID: `schedulio_db`
 
 ## classes
+Table permissions: none (row-level ACL only)
 - `ownerId` varchar(64) required
 - `title` varchar(255) required
 - `classKind` enum: `lecture`, `lab`, `other`
@@ -20,6 +21,7 @@ Indexes:
 - key: `idx_classes_owner_weekday_time` on (`ownerId`, `weekday`, `startTime`)
 
 ## class_skips
+Table permissions: none (row-level ACL only)
 - `ownerId` varchar(64) required
 - `classId` varchar(64) required
 - `date` varchar(10) required (`YYYY-MM-DD`)
@@ -27,9 +29,10 @@ Indexes:
 
 Indexes:
 - key: `idx_skips_owner_date` on (`ownerId`, `date`)
-- key: `idx_skips_class_date` on (`classId`, `date`)
+- unique: `idx_skips_class_date` on (`classId`, `date`)
 
 ## tasks
+Table permissions: none (row-level ACL only)
 - `ownerId` varchar(64) required
 - `classId` varchar(64) required
 - `occurrenceDate` varchar(10) required (`YYYY-MM-DD`)
@@ -40,8 +43,10 @@ Indexes:
 Indexes:
 - key: `idx_tasks_owner_date` on (`ownerId`, `occurrenceDate`)
 - key: `idx_tasks_class_date` on (`classId`, `occurrenceDate`)
+- unique: `idx_tasks_owner_class_date_unique` on (`ownerId`, `classId`, `occurrenceDate`)
 
 ## subtasks
+Table permissions: none (row-level ACL only)
 - `ownerId` varchar(64) required
 - `taskId` varchar(64) required
 - `title` varchar(255) required
